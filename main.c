@@ -21,8 +21,8 @@ uint16_t main() {
 	double x = 0.5;
 	const double epsilon = 1.0e-2;
 
-	segment_t seg = methodSven(x, 1);
-	const double xmin = methodDichotomy(seg.a, seg.b, epsilon);
+	//segment_t seg = methodSven(x, 1);
+	const double xmin = methodDichotomy(0.5, 3.0, epsilon);
 
 	printf("x = %f\n", xmin);
 
@@ -103,8 +103,9 @@ double methodDichotomy(const double a, const double b, const double epsilon) {
 	double bk = b;
 	double ck = (a + b) * inv2;
 	double f_ck = fun(ck);
+	double convergense = fabs(bk - ak);
 
-	while (fabs(bk - ak) <= epsilon) {
+	while (convergense > epsilon) {
 		const double yk = (ak + bk) * inv2;
 		const double f_yk = fun(yk);
 
@@ -125,6 +126,7 @@ double methodDichotomy(const double a, const double b, const double epsilon) {
 				f_ck = fun(ck);
 			}
 		}
+		convergense = fabs(bk - ak);
 	}
 
 	return (ak + bk) * inv2;
