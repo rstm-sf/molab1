@@ -18,11 +18,12 @@ double methodGoldenSection(segment_t seg, double epsilon);
 double methodFibonacci(segment_t seg, double epsilon);
 
 uint16_t main() {
-	double x0 = 6.0;
+	double x0 = 3.0;
 	const double epsilon = 1.0e-2;
-	const double t = 0.01;
+	const double t = 0.1;
 
 	segment_t seg = methodSven(x0, t);
+	printf("[%.2f, %.2f]\n", seg.a, seg.b);
 	const double xmin = methodDichotomy(seg, epsilon);
 
 	printf("x = %f\n", xmin);
@@ -72,11 +73,11 @@ segment_t methodSven(const double x0, const double t) {
 
 	double f_xk1, xk;
 	do {
-		k++;
 		xk = xk1;
 		f_xk = fun(xk);
-		xk1 += (2 << k) * delta;
-		f_xk1 = fun(xk1);		
+		xk1 = xk + (2 << k) * delta;
+		f_xk1 = fun(xk1);
+		k++;
 	} while (f_xk1 < f_xk);
 
 	*bound_xk = xk;
