@@ -18,11 +18,11 @@ double methodGoldenSection(double a, double b, double epsilon);
 double methodFibonacci(double a, double b, double epsilon);
 
 uint16_t main() {
-	double x = 0.5;
+	double x = 4;
 	const double epsilon = 1.0e-2;
 
-	//segment_t seg = methodSven(x, 1);
-	const double xmin = methodDichotomy(0.5, 3.0, epsilon);
+	segment_t seg = methodSven(x, 1);
+	const double xmin = methodDichotomy(seg.a, seg.b, epsilon);
 
 	printf("x = %f\n", xmin);
 
@@ -40,11 +40,9 @@ segment_t methodSven(const double x0, const double t) {
 	uint16_t k = 0;
 	double a = x0 - t;
 	double b = x0 + t;
-	double x = x0;
-	double xk;
-	double f_a = fun(a);
-	double f_x = fun(x);
-	double f_b = fun(b);
+	const double f_a = fun(a);
+	double f_x = fun(x0);
+	const double f_b = fun(b);
 
 	if (f_a <= f_x && f_b <= f_x) {
 		printf("Error! No unimodal\n");
@@ -58,20 +56,24 @@ segment_t methodSven(const double x0, const double t) {
 	}
 
 	double delta;
+	double xk;
 
 	if (f_a >= f_x && f_x >= f_b ) {
-		a = x;
+		a = x0;
 		xk = b;
 		delta = t;
 	} else if (f_a <= f_x &&  f_x <= f_b  ) {
-		b = x;
+		b = x0;
 		xk = a;
 		delta = -t;
 	}
 	k++;
 
+	double x;
 	double f_xk;
 	do {
+		x = xk;
+		f_x = fun(x);
 		xk += (2 << k) * delta;
 		k++;
 		f_xk = fun(xk);
@@ -81,8 +83,6 @@ segment_t methodSven(const double x0, const double t) {
 		} else {// <--, меняем b; a где=то еще левее
 			b = x;
 		}
-
-		x = xk;
 	} while (f_xk < f_x);
 
 	if (delta == t) {
