@@ -12,17 +12,18 @@ typedef struct segment segment_t;
 
 double fun(double x);
 segment_t methodSven(double x0, double t);
-double methodDichotomy(double a, double b, double epsilon);
+double methodDichotomy(segment_t seg, double epsilon);
 double fun_y(double a, double b);
-double methodGoldenSection(double a, double b, double epsilon);
-double methodFibonacci(double a, double b, double epsilon);
+double methodGoldenSection(segment_t seg, double epsilon);
+double methodFibonacci(segment_t seg, double epsilon);
 
 uint16_t main() {
-	double x = 4;
+	double x0 = 6.0;
 	const double epsilon = 1.0e-2;
+	const double t = 0.01;
 
-	segment_t seg = methodSven(x, 1);
-	const double xmin = methodDichotomy(seg.a, seg.b, epsilon);
+	segment_t seg = methodSven(x0, t);
+	const double xmin = methodDichotomy(seg, epsilon);
 
 	printf("x = %f\n", xmin);
 
@@ -32,64 +33,54 @@ uint16_t main() {
 }
 
 inline double fun(const double x) {
-	return x < 1.0 ? 1.0 / (sin(x)*sin(x) + 1.0) : 0.5 * x*x - 2.0 * x + 2.0;
+	return x < 1.0 ? 1.0 / (sin(x*x) + 1.0) : 0.5 * x*x - 2.0 * x + 2.0;
 }
 
 segment_t methodSven(const double x0, const double t) {
-	segment_t seg;
+	segment_t seg = { 0 };
 	uint16_t k = 0;
 	double a = x0 - t;
 	double b = x0 + t;
 	const double f_a = fun(a);
-	double f_x = fun(x0);
+	double f_xk = fun(x0);
 	const double f_b = fun(b);
 
-	if (f_a <= f_x && f_b <= f_x) {
+	if (f_a <= f_xk && f_b <= f_xk) {
 		printf("Error! No unimodal\n");
-		seg.a = 0.0;
-		seg.b = 0.0;
 		return seg;
-	} else if (f_a >= f_x && f_b >= f_x) {
+	} else if (f_a >= f_xk && f_b >= f_xk) {
 		seg.a = a;
 		seg.b = b;
 		return seg;
 	}
 
-	double delta;
-	double xk;
-
-	if (f_a >= f_x && f_x >= f_b ) {
+	double delta, xk1;
+	double *bound_xk, *bound_xk1;
+	if (f_a >= f_xk && f_xk >= f_b) {
 		a = x0;
-		xk = b;
+		xk1 = b;
 		delta = t;
-	} else if (f_a <= f_x &&  f_x <= f_b  ) {
-		b = x0;
-		xk = a;
-		delta = -t;
-	}
-	k++;
-
-	double x;
-	double f_xk;
-	do {
-		x = xk;
-		f_x = fun(x);
-		xk += (2 << k) * delta;
-		k++;
-		f_xk = fun(xk);
-
-		if (delta == t) { // -->, меняем a; b где=то еще правее
-			a = x;
-		} else {// <--, меняем b; a где=то еще левее
-			b = x;
-		}
-	} while (f_xk < f_x);
-
-	if (delta == t) {
-		b = xk;
+		bound_xk = &a;
+		bound_xk1 = &b;
 	} else {
-		a = xk;
+		b = x0;
+		xk1 = a;
+		delta = -t;
+		bound_xk1 = &a;
+		bound_xk = &b;
 	}
+
+	double f_xk1, xk;
+	do {
+		k++;
+		xk = xk1;
+		f_xk = fun(xk);
+		xk1 += (2 << k) * delta;
+		f_xk1 = fun(xk1);		
+	} while (f_xk1 < f_xk);
+
+	*bound_xk = xk;
+	*bound_xk1 = xk1;
 
 	seg.a = a;
 	seg.b = b;
@@ -97,11 +88,11 @@ segment_t methodSven(const double x0, const double t) {
 	return seg;
 }
 
-double methodDichotomy(const double a, const double b, const double epsilon) {
+double methodDichotomy(const segment_t seg, const double epsilon) {
 	const double inv2 = 0.5;
-	double ak = a;
-	double bk = b;
-	double ck = (a + b) * inv2;
+	double ak = seg.a;
+	double bk = seg.b;
+	double ck = (ak + bk) * inv2;
 	double f_ck = fun(ck);
 	double convergense = fabs(bk - ak);
 
@@ -133,19 +124,20 @@ double methodDichotomy(const double a, const double b, const double epsilon) {
 }
 
 inline double fun_y(const double a, const double b) {
-	return a + (3 - sqrt(5));
+	// sqrt(5) ~ 2.2360679774997898
+	return a + (3 - 2.2360679774997898);
 }
 
-double methodGoldenSection(const double a, const double b, const double epsilon) {
-	double ak = a;
-	double bk = b;
+double methodGoldenSection(const segment_t seg, const double epsilon) {
+	double ak = seg.a;
+	double bk = seg.b;
 
 	return 0;
 }
 
-double methodFibonacci(const double a, const double b, const double epsilon) {
-	double ak = a;
-	double bk = b;
+double methodFibonacci(const segment_t seg, const double epsilon) {
+	double ak = seg.a;
+	double bk = seg.b;
 
 	return 0;
 }
