@@ -13,7 +13,6 @@ typedef struct segment segment_t;
 double fun(double x);
 segment_t methodSven(double x0, double t);
 double methodDichotomy(segment_t seg, double epsilon);
-double fun_y(double a, double b);
 double methodGoldenSection(segment_t seg, double epsilon);
 double methodFibonacci(segment_t seg, double epsilon);
 
@@ -24,9 +23,9 @@ uint16_t main() {
 
 	segment_t seg = methodSven(x0, t);
 	printf("[%.2f, %.2f]\n", seg.a, seg.b);
-	const double xmin = methodDichotomy(seg, epsilon);
+	const double xmin = methodGoldenSection(seg, epsilon);
 
-	printf("x = %f\n", xmin);
+	printf("\nxmin = %f\n", xmin);
 
 	system("pause");
 
@@ -73,11 +72,11 @@ segment_t methodSven(const double x0, const double t) {
 
 	double f_xk1, xk;
 	do {
+		k++;
 		xk = xk1;
 		f_xk = fun(xk);
-		xk1 = xk + (2 << k) * delta;
+		xk1 = xk + (1 << k) * delta;
 		f_xk1 = fun(xk1);
-		k++;
 	} while (f_xk1 < f_xk);
 
 	*bound_xk = xk;
@@ -85,6 +84,8 @@ segment_t methodSven(const double x0, const double t) {
 
 	seg.a = a;
 	seg.b = b;
+
+	printf("The method Sven\nIters = %" PRIu16 "\n", k);
 
 	return seg;
 }
@@ -95,9 +96,10 @@ double methodDichotomy(const segment_t seg, const double epsilon) {
 	double bk = seg.b;
 	double ck = (ak + bk) * inv2;
 	double f_ck = fun(ck);
-	double convergense = fabs(bk - ak);
+	double convergence = fabs(bk - ak);
 
-	while (convergense > epsilon) {
+	uint16_t k = 0;
+	while (convergence > epsilon) {
 		const double yk = (ak + bk) * inv2;
 		const double f_yk = fun(yk);
 
@@ -118,22 +120,48 @@ double methodDichotomy(const segment_t seg, const double epsilon) {
 				f_ck = fun(ck);
 			}
 		}
-		convergense = fabs(bk - ak);
+		convergence = fabs(bk - ak);
+		k++;
 	}
 
-	return (ak + bk) * inv2;
-}
+	printf("The method of Dichotomy\nIters = %" PRIu16 "\nConvergence = %e\n", k, convergence);
 
-inline double fun_y(const double a, const double b) {
-	// sqrt(5) ~ 2.2360679774997898
-	return a + (3 - 2.2360679774997898);
+	return (ak + bk) * inv2;
 }
 
 double methodGoldenSection(const segment_t seg, const double epsilon) {
 	double ak = seg.a;
 	double bk = seg.b;
+	// (3 - sqrt(5))/2 ~ 0.3819660112501051
+	double yk = ak + 0.3819660112501051 * (bk - ak);
+	double zk = ak + bk - yk;
+	double f_yk = fun(yk);
+	double f_zk = fun(zk);
+	double convergence;
 
-	return 0;
+	uint16_t k = 0;
+	do {
+		if (f_yk <= f_zk) {
+			bk = zk;
+			zk = yk;
+			f_zk = f_yk;
+			yk = ak + bk - yk;
+			f_yk = fun(yk);
+		} else {
+			ak = yk;
+			yk = zk;
+			f_yk = f_zk;
+			zk = ak + bk - zk;
+			f_zk = fun(zk);
+		}
+
+		convergence = fabs(ak - bk);
+		k++;
+	} while (convergence > epsilon);
+
+	printf("The method of the Golden section\nIters = %" PRIu16 "\nConvergence = %e\n", k, convergence);
+
+	return (ak + bk) * 0.5;
 }
 
 double methodFibonacci(const segment_t seg, const double epsilon) {
