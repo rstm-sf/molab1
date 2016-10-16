@@ -21,10 +21,11 @@ uint32_t main() {
 	double x0 = 3.0;
 	const double epsilon = 1.0e-2;
 	const double t = 0.1;
+	const double l = 1;
 
 	segment_t seg = methodSven(x0, t);
 	printf("[%.2f, %.2f]\n", seg.a, seg.b);
-	const double xmin = methodFibonacci(seg, 1, epsilon);
+	const double xmin = methodFibonacci(seg, l, epsilon);
 
 	printf("\nxmin = %f\n", xmin);
 
