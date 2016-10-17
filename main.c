@@ -18,12 +18,12 @@ uint32_t findNforFibonacci(segment_t seg, double l);
 double methodFibonacci(segment_t seg, double l, double epsilon);
 
 uint32_t main() {
-	double x0 = 3.0;
+	const double x0 = 1.5;
 	const double epsilon = 1.0e-2;
 	const double t = 0.1;
-	const double l = 1;
+	const double l = epsilon;
 
-	segment_t seg = methodSven(x0, t);
+	const segment_t seg = methodSven(x0, t);
 	printf("[%.2f, %.2f]\n", seg.a, seg.b);
 	const double xmin = methodFibonacci(seg, l, epsilon);
 
@@ -167,7 +167,7 @@ double methodGoldenSection(const segment_t seg, const double epsilon) {
 }
 
 uint32_t findNforFibonacci(const segment_t seg, const double l) {
-	uint32_t N = 4;
+	uint32_t N = 1;
 	uint64_t F0 = 1, F1 = 2, F2 = 3;
 	const uint64_t bound = (uint64_t)(fabs(seg.b - seg.a) / l);
 
@@ -185,39 +185,38 @@ double methodFibonacci(const segment_t seg, const double l, const double epsilon
 	double ak = seg.a;
 	double bk = seg.b;
 
-	const uint32_t N = findNforFibonacci(seg, l); // N >= 4
-	double *F = (double *)malloc(N * sizeof(double));
-	F[0] = F[1] = 1; F[2] = 2;
-	double *lastF = F + 3;
-	lastF[0] = 3;
-	for (uint32_t i = 4; i < N; ++i) {
-		lastF++;
-		lastF[0] = lastF[-1] + lastF[-2];
+	const uint32_t N = findNforFibonacci(seg, l); // N >= 1
+	double *F = (double *)malloc((N + 3) * sizeof(double));
+	F[0] = F[1] = 1.0; F[2] = 2.0; F[3] = 3.0;
+	double *currentF = F + 1;
+	for (uint32_t i = 4; i < N + 3; ++i) {
+		currentF++;
+		currentF[2] = currentF[1] + currentF[0];
 	}
 
-	double *firstF = lastF - 2;
-	double yk = ak + firstF[0] / firstF[2] * (bk - ak);
-	double zk = ak + firstF[1] / firstF[2] * (bk - ak);
+	double yk = ak + currentF[0] / currentF[2] * (bk - ak);
+	double zk = ak + bk - yk;
 	double f_yk = fun(yk);
 	double f_zk = fun(zk);
 
-	uint32_t k = 3;
+	uint32_t k = 0;
 	while (k < N) {
 		k++;
-		firstF--;
+		currentF--;
 		if (f_yk <= f_zk) {
 			bk = zk;
 			zk = yk;
 			f_zk = f_yk;
-			yk = ak + firstF[0] / firstF[2] * (bk - ak);
+			yk = ak + currentF[0] / currentF[2] * (bk - ak);
+			f_yk = fun(yk);
 		} else {
 			ak = yk;
 			yk = zk;
 			f_yk = f_zk;
-			zk = ak + firstF[1] / firstF[2] * (bk - ak);
+			zk = ak + currentF[1] / currentF[2] * (bk - ak);
+			f_zk = fun(zk);
 		}
 	}
-	k -= 3;
 
 	zk += epsilon;
 	f_zk = fun(zk);
@@ -225,7 +224,8 @@ double methodFibonacci(const segment_t seg, const double l, const double epsilon
 		bk = zk;
 	}
 
-	printf("The method Fibonacci\nN = %" PRIu32 "\nIters = %" PRIu32 "\n", N, k);
+	printf("The method Fibonacci\nN = %" PRIu32 "\n", N);
+	free(F);
 
 	return (ak + bk) * 0.5;
 }
