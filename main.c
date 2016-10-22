@@ -19,14 +19,14 @@ uint32_t findNforFibonacci(segment_t seg, double l);
 double methodFibonacci(segment_t seg, double l, double epsilon);
 
 uint32_t main() {
-	const double x0 = 1.5;
+	const double x0      = 1.9;
 	const double epsilon = 1.0e-2;
-	const double t = 0.1;
-	const double l = epsilon;
+	const double t       = 0.3;
+	const double l       = epsilon; // for methodFibonacci
 
 	const segment_t seg = methodSven(x0, t);
 	printf("[%.2f, %.2f]\n", seg.a, seg.b);
-	const double xmin = methodFibonacci(seg, l, epsilon);
+	const double xmin = methodGoldenSection(seg, epsilon);
 
 	printf("\nxmin = %f\n", xmin);
 
@@ -40,12 +40,12 @@ inline double fun(const double x) {
 }
 
 segment_t methodSven(const double x0, const double t) {
-	segment_t seg = { 0 };
-	uint16_t k = 0;
-	double a = x0 - t;
-	double b = x0 + t;
+	segment_t seg    = { 0 };
+	double a         = x0 - t;
+	double xk        = x0;
+	double b         = x0 + t;
 	const double f_a = fun(a);
-	double f_xk = fun(x0);
+	double f_xk      = fun(xk);
 	const double f_b = fun(b);
 
 	if (f_a <= f_xk && f_b <= f_xk) {
@@ -60,29 +60,28 @@ segment_t methodSven(const double x0, const double t) {
 	double delta, xk1;
 	double *bound_xk, *bound_xk1;
 	if (f_a >= f_xk && f_xk >= f_b) {
-		a = x0;
-		xk1 = b;
-		delta = t;
-		bound_xk = &a;
+		xk1       = b;
+		delta     = t;
+		bound_xk  = &a;
 		bound_xk1 = &b;
 	} else {
-		b = x0;
-		xk1 = a;
-		delta = -t;
+		xk1       = a;
+		delta     = -t;
 		bound_xk1 = &a;
-		bound_xk = &b;
+		bound_xk  = &b;
 	}
 
-	double f_xk1, xk;
+	double f_xk1 = fun(xk1);
+	uint16_t k   = 0;
 	do {
 		k++;
 		xk = xk1;
-		f_xk = fun(xk);
-		xk1 = xk + (1 << k) * delta;
+		f_xk = f_xk1;
+		xk1 += (1 << k) * delta;
 		f_xk1 = fun(xk1);
 	} while (f_xk1 < f_xk);
 
-	*bound_xk = xk;
+	*bound_xk  = xk;
 	*bound_xk1 = xk1;
 
 	seg.a = a;
