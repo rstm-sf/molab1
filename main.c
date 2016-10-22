@@ -13,7 +13,7 @@ typedef struct segment segment_t;
 
 double fun(double x);
 segment_t methodSven(double x0, double t);
-double methodDichotomy(segment_t seg, double epsilon);
+double methodBisection(segment_t seg, double epsilon);
 double methodGoldenSection(segment_t seg, double epsilon);
 uint32_t findNforFibonacci(segment_t seg, double l);
 double methodFibonacci(segment_t seg, double l, double epsilon);
@@ -26,7 +26,7 @@ uint32_t main() {
 
 	const segment_t seg = methodSven(x0, t);
 	printf("[%.2f, %.2f]\n", seg.a, seg.b);
-	const double xmin = methodGoldenSection(seg, epsilon);
+	const double xmin = methodBisection(seg, epsilon);
 
 	printf("\nxmin = %f\n", xmin);
 
@@ -92,25 +92,26 @@ segment_t methodSven(const double x0, const double t) {
 	return seg;
 }
 
-double methodDichotomy(const segment_t seg, const double epsilon) {
-	const double inv2 = 0.5;
-	double ak = seg.a;
-	double bk = seg.b;
-	double ck = (ak + bk) * inv2;
-	double f_ck = fun(ck);
+double methodBisection(const segment_t seg, const double epsilon) {
+	const double inv2  = 0.5;
+	const double inv4  = 0.25;
+	double ak          = seg.a;
+	double bk          = seg.b;
+	double ck          = (ak + bk) * inv2;
+	double f_ck        = fun(ck);
 	double convergence = fabs(bk - ak);
 
 	uint16_t k = 0;
 	while (convergence > epsilon) {
-		const double yk = (ak + bk) * inv2;
+		const double yk   = ak + convergence * inv4;
 		const double f_yk = fun(yk);
 
 		if (f_yk <= f_ck) {
-			bk = ck;
-			ck = yk;
+			bk   = ck;
+			ck   = yk;
 			f_ck = fun(ck);
 		} else {
-			const double zk = (bk + ck) * inv2;
+			const double zk   = bk - convergence * inv4;
 			const double f_zk = fun(zk);
 
 			if (f_ck <= f_zk) {
@@ -126,17 +127,17 @@ double methodDichotomy(const segment_t seg, const double epsilon) {
 		k++;
 	}
 
-	printf("The method of Dichotomy\nIters = %" PRIu16 "\nConvergence = %e\n", k, convergence);
+	printf("The method of Bisection\nIters = %" PRIu16 "\nConvergence = %e\n", k, convergence);
 
 	return (ak + bk) * inv2;
 }
 
 double methodGoldenSection(const segment_t seg, const double epsilon) {
-	double ak = seg.a;
-	double bk = seg.b;
+	double ak   = seg.a;
+	double bk   = seg.b;
 	// (3 - sqrt(5))/2 ~ 0.3819660112501051
-	double yk = ak + 0.3819660112501051 * (bk - ak);
-	double zk = ak + bk - yk;
+	double yk   = ak + 0.3819660112501051 * (bk - ak);
+	double zk   = ak + bk - yk;
 	double f_yk = fun(yk);
 	double f_zk = fun(zk);
 	double convergence;
@@ -144,16 +145,16 @@ double methodGoldenSection(const segment_t seg, const double epsilon) {
 	uint16_t k = 0;
 	do {
 		if (f_yk <= f_zk) {
-			bk = zk;
-			zk = yk;
+			bk   = zk;
+			zk   = yk;
 			f_zk = f_yk;
-			yk = ak + bk - yk;
+			yk   = ak + bk - yk;
 			f_yk = fun(yk);
 		} else {
-			ak = yk;
-			yk = zk;
+			ak   = yk;
+			yk   = zk;
 			f_yk = f_zk;
-			zk = ak + bk - zk;
+			zk   = ak + bk - zk;
 			f_zk = fun(zk);
 		}
 
@@ -186,7 +187,7 @@ double methodFibonacci(const segment_t seg, const double l, const double epsilon
 	double bk = seg.b;
 
 	const uint32_t N = findNforFibonacci(seg, l); // N >= 1
-	double *F = (double *)malloc((N + 3) * sizeof(double));
+	double *F        = (double *)malloc((N + 3) * sizeof(double));
 	F[0] = F[1] = 1.0; F[2] = 2.0; F[3] = 3.0;
 	double *currentF = F + 1;
 	for (uint32_t i = 4; i < N + 3; ++i) {
@@ -194,8 +195,8 @@ double methodFibonacci(const segment_t seg, const double l, const double epsilon
 		currentF[2] = currentF[1] + currentF[0];
 	}
 
-	double yk = ak + currentF[0] / currentF[2] * (bk - ak);
-	double zk = ak + bk - yk;
+	double yk   = ak + currentF[0] / currentF[2] * (bk - ak);
+	double zk   = ak + bk - yk;
 	double f_yk = fun(yk);
 	double f_zk = fun(zk);
 
@@ -204,21 +205,21 @@ double methodFibonacci(const segment_t seg, const double l, const double epsilon
 		k++;
 		currentF--;
 		if (f_yk <= f_zk) {
-			bk = zk;
-			zk = yk;
+			bk   = zk;
+			zk   = yk;
 			f_zk = f_yk;
-			yk = ak + currentF[0] / currentF[2] * (bk - ak);
+			yk   = ak + currentF[0] / currentF[2] * (bk - ak);
 			f_yk = fun(yk);
 		} else {
-			ak = yk;
-			yk = zk;
+			ak   = yk;
+			yk   = zk;
 			f_yk = f_zk;
-			zk = ak + currentF[1] / currentF[2] * (bk - ak);
+			zk   = ak + currentF[1] / currentF[2] * (bk - ak);
 			f_zk = fun(zk);
 		}
 	}
 
-	zk += epsilon;
+	zk  += epsilon;
 	f_zk = fun(zk);
 	if (f_yk <= f_zk) {
 		bk = zk;
